@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time Chat App</title>
+  <style>
+    /* Basic Styling */
+    body {
+      font-family: Arial, sans-serif;
+      background: url('real time chat.jpeg') no-repeat center center/cover;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    #chat-box {
+      width: 400px;
+      height: 300px;
+      border: 1px solid #ccc;
+      background: #fff;
+      overflow-y: auto;
+      padding: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    #message-form, #username-form {
+      display: flex;
+      width: 400px;
+      margin-bottom: 10px;
+    }
+
+    input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px;
+      border: none;
+      background: blue;
+      color: white;
+      cursor: pointer;
+    }
+
+    .message {
+      margin-bottom: 5px;
+    }
+
+    .message .username {
+      font-weight: bold;
+      color: blue;
+    }
+
+    .message .timestamp {
+      font-size: 0.8em;
+      color: gray;
+    }
+  </style>
+</head>
+<body>
+  <h1>Real-Time Chat App</h1>
+  
+  <!-- Username Form -->
+  <form id="username-form">
+    <input id="username-input" type="text" placeholder="Enter your username" autocomplete="off" required />
+    <button type="submit">Set Username</button>
+  </form>
+
+  <!-- Chat Box -->
+  <div id="chat-box"></div>
+
+  <!-- Message Form -->
+  <form id="message-form">
+    <input id="message-input" type="text" placeholder="Type a message..." autocomplete="off" required />
+    <button type="submit">Send</button>
+  </form>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io(); // Connect to the server
+
+    // References to DOM Elements
+    const usernameForm = document.getElementById('username-form');
+    const usernameInput = document.getElementById('username-input');
+    const chatBox = document.getElementById('chat-box');
+    const messageForm = document.getElementById('message-form');
+    const messageInput = document.getElementById('message-input');
+
+    // Set Username
+    usernameForm.addEventListener('submit', (e) => {
+      e.preventDefault(); // Prevent page reload
+      const username = usernameInput.value.trim();
+      if (username) {
+        socket.emit('set username', username); // Send username to the server
+        usernameForm.style.display = 'none'; // Hide the username form
+      }
+    });
+
+    // Send Message
+    messageForm.addEventListener('submit', (e) => {
+      e.preventDefault(); // Prevent page reload
+      const message = messageInput.value.trim();
+      if (message) {
+        socket.emit('chat message', message); // Send the message to the server
+        messageInput.value = ''; // Clear the input field
+      }
+    });
+
+    // Display Messages
+    socket.on('chat message', (data) => {
+      console.log('Message received:', data); // Debugging log
+      const { username = 'Unknown', message = 'No message', timestamp = 'Unknown time' } = data;
+
+      const messageElement = document.createElement('div');
+      messageElement.classList.add('message');
+      messageElement.innerHTML = `
+        <span class="username">${username}:</span>
+        <span class="timestamp">[${timestamp}]</span>
+        <div>${message}</div>
+      `;
+      chatBox.appendChild(messageElement);
+      chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll to the latest message
+    });
+  </script>
+</body>
+</html>
